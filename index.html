@@ -2,74 +2,379 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Kleenernetz – Packet Catch</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b1020">
+<title>Kleener Blocks</title>
 <style>
-:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;--bg:#0b1020;--panel:rgba(17,24,39,.84);--line:rgba(255,255,255,.12);--text:#f8fafc;--muted:#aab6c7;--green:#22c55e}
+:root{
+  color-scheme:dark;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --bg:#0b1020;--panel:rgba(17,24,39,.86);--line:rgba(255,255,255,.12);
+  --text:#f8fafc;--muted:#aab6c7;--accent:#22c55e;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;min-height:100svh;display:grid;place-items:center;padding:14px;background:radial-gradient(circle at 15% 15%,rgba(59,130,246,.18),transparent 30%),radial-gradient(circle at 85% 80%,rgba(34,197,94,.14),transparent 30%),var(--bg);color:var(--text);overflow:hidden}
-.app{width:min(900px,100%);display:grid;gap:12px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.brand{font-weight:800;display:flex;align-items:center;gap:9px}.dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 16px #22c55e}
-.stats{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);font-size:14px}.pill b{color:white}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.35)}
-.game{height:min(70svh,620px);min-height:500px;position:relative;overflow:hidden;touch-action:manipulation;user-select:none;background:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:32px 32px}
-.packet{position:absolute;width:62px;height:62px;border-radius:18px;border:1px solid rgba(255,255,255,.18);display:grid;place-items:center;background:linear-gradient(145deg,#3b82f6,#22c55e);color:#fff;font-size:28px;font-weight:900;transform:translate(-50%,-50%);box-shadow:0 14px 28px rgba(0,0,0,.28);cursor:pointer;transition:.08s}
-.packet.bad{background:linear-gradient(145deg,#ef4444,#f59e0b)}.packet.hit{opacity:0;transform:translate(-50%,-50%) scale(1.35)}
-.overlay{position:absolute;inset:0;display:grid;place-items:center;padding:22px;z-index:5}.card{width:min(560px,100%);padding:28px;text-align:center;border-radius:22px;background:rgba(7,12,25,.86);border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.32)}
-h1{margin:0 0 12px;font-size:clamp(34px,7vw,58px);line-height:.98;letter-spacing:-.04em}p{color:var(--muted);line-height:1.6}
-button{border:0;border-radius:16px;padding:14px 20px;font:inherit;font-weight:800;cursor:pointer}.hint{margin-top:12px;color:#8fa0b6;font-size:13px}
-.flash{position:absolute;z-index:4;font-weight:900;font-size:22px;pointer-events:none;transform:translate(-50%,-50%);animation:float .5s ease forwards}@keyframes float{to{opacity:0;transform:translate(-50%,-90%) scale(1.2)}}
-.footer{text-align:center;color:#7e8ba0;font-size:13px}
-@media(max-width:600px){body{padding:9px}.game{height:73svh;min-height:500px}.packet{width:56px;height:56px;border-radius:16px}.card{padding:22px}}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);overscroll-behavior:none}
+body{
+  min-height:100svh;display:grid;place-items:center;padding:12px;overflow:hidden;
+  background:
+    radial-gradient(circle at 15% 15%,rgba(59,130,246,.18),transparent 30%),
+    radial-gradient(circle at 85% 82%,rgba(34,197,94,.14),transparent 30%),
+    var(--bg);
+}
+.app{width:min(980px,100%);display:grid;gap:10px}
+.top{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap
+}
+.brand{font-weight:900;display:flex;align-items:center;gap:9px;letter-spacing:-.02em}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 16px var(--accent)}
+.stats{display:flex;gap:7px;flex-wrap:wrap}
+.pill{
+  padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.06);
+  border:1px solid var(--line);color:var(--muted);font-size:13px
+}
+.pill b{color:#fff}
+.shell{
+  display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:12px;
+  background:var(--panel);border:1px solid var(--line);border-radius:24px;
+  padding:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);backdrop-filter:blur(14px)
+}
+.game-wrap{position:relative;display:grid;place-items:center;min-height:0}
+canvas{
+  display:block;max-width:100%;height:auto;aspect-ratio:1/2;
+  border-radius:16px;border:1px solid rgba(255,255,255,.1);
+  background:#070b15;box-shadow:inset 0 0 35px rgba(0,0,0,.35);
+  touch-action:none
+}
+.side{display:flex;flex-direction:column;gap:10px}
+.card{
+  padding:14px;border-radius:18px;background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.08)
+}
+.card h3{margin:0 0 10px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.next{width:100%;aspect-ratio:1.35/1;border-radius:14px;background:#070b15;border:1px solid rgba(255,255,255,.08)}
+.help{font-size:13px;line-height:1.55;color:var(--muted)}
+.help b{color:#fff}
+.btn{
+  appearance:none;border:1px solid rgba(255,255,255,.12);border-radius:14px;
+  padding:11px 12px;background:rgba(255,255,255,.07);color:#fff;font:inherit;font-weight:800;cursor:pointer
+}
+.btn.primary{background:#f8fafc;color:#07101a}
+.btn:active{transform:translateY(1px)}
+.controls{
+  display:none;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:2px
+}
+.ctrl{
+  min-height:54px;border-radius:15px;border:1px solid rgba(255,255,255,.11);
+  background:rgba(255,255,255,.075);color:#fff;font-size:22px;font-weight:900;touch-action:manipulation
+}
+.ctrl:active{background:rgba(255,255,255,.14)}
+.overlay{
+  position:absolute;inset:0;display:grid;place-items:center;padding:22px;z-index:5
+}
+.overlay.hidden{display:none}
+.modal{
+  width:min(480px,92%);padding:26px;text-align:center;border-radius:22px;
+  background:rgba(7,12,25,.94);border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.45)
+}
+.modal h1{margin:0 0 10px;font-size:clamp(34px,7vw,58px);line-height:.98;letter-spacing:-.045em}
+.modal p{margin:0 0 18px;color:var(--muted);line-height:1.55}
+.footer{text-align:center;color:#7d8899;font-size:12px}
+@media(max-width:760px){
+  body{padding:8px;overflow:auto}
+  .shell{grid-template-columns:1fr;padding:9px}
+  .side{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .side .help-card{display:none}
+  .side .wide{grid-column:1/-1}
+  .controls{display:grid}
+  canvas{width:min(82vw,360px)}
+}
+@media(max-height:760px) and (min-width:761px){
+  canvas{height:68svh;width:auto}
+}
 </style>
 </head>
 <body>
 <main class="app">
-<div class="top">
-<div class="brand"><span class="dot"></span>Kleenernetz · Packet Catch</div>
-<div class="stats"><div class="pill">Punkte: <b id="score">0</b></div><div class="pill">Zeit: <b id="time">30</b>s</div><div class="pill">Highscore: <b id="high">0</b></div></div>
-</div>
-<section class="panel">
-<div class="game" id="game">
-<div class="overlay" id="overlay">
-<div class="card">
-<h1>Packet Catch 📦</h1>
-<p>Fang in 30 Sekunden so viele grüne Datenpakete wie möglich. Rote Pakete kosten 2 Punkte. 😈</p>
-<button id="start">Spiel starten</button>
-<div class="hint">Funktioniert mit Maus, Touch und Stift.</div>
-</div>
-</div>
-</div>
-</section>
-<div class="footer">kleenernetz.de · kleiner öffentlicher Test 😎</div>
+  <div class="top">
+    <div class="brand"><span class="dot"></span>Kleener Blocks</div>
+    <div class="stats">
+      <div class="pill">Punkte: <b id="score">0</b></div>
+      <div class="pill">Level: <b id="level">1</b></div>
+      <div class="pill">Linien: <b id="lines">0</b></div>
+      <div class="pill">Highscore: <b id="high">0</b></div>
+    </div>
+  </div>
+
+  <section class="shell">
+    <div class="game-wrap">
+      <canvas id="game" width="300" height="600" aria-label="Kleener Blocks Spielfeld"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="modal">
+          <h1>Kleener Blocks 🧱</h1>
+          <p>
+            Baue vollständige Reihen und räume sie ab. Je höher dein Level,
+            desto schneller fallen die Blöcke. Wenn oben kein Platz mehr ist:
+            <b style="color:white">Game Over.</b> 😈
+          </p>
+          <button class="btn primary" id="start">Spiel starten</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="card">
+        <h3>Nächster Block</h3>
+        <canvas class="next" id="next" width="160" height="120"></canvas>
+      </div>
+
+      <div class="card help-card">
+        <h3>Steuerung</h3>
+        <div class="help">
+          <b>PC:</b> ← → bewegen<br>
+          <b>↑</b> drehen · <b>↓</b> schneller<br>
+          <b>Leertaste</b> fallen lassen<br>
+          <b>P</b> Pause
+        </div>
+      </div>
+
+      <button class="btn" id="pause">Pause</button>
+      <button class="btn" id="restart">Neu starten</button>
+
+      <div class="controls wide" aria-label="Touch-Steuerung">
+        <button class="ctrl" data-act="left">←</button>
+        <button class="ctrl" data-act="rotate">↻</button>
+        <button class="ctrl" data-act="down">↓</button>
+        <button class="ctrl" data-act="drop">⤓</button>
+        <button class="ctrl" data-act="right">→</button>
+      </div>
+    </aside>
+  </section>
+
+  <div class="footer">kleenernetz.de · Highscore wird nur auf diesem Gerät gespeichert.</div>
 </main>
+
 <script>
-const game=document.getElementById('game'),overlay=document.getElementById('overlay'),scoreEl=document.getElementById('score'),timeEl=document.getElementById('time'),highEl=document.getElementById('high');
-let score=0,timeLeft=30,running=false,spawnTimer,countdownTimer;
-const KEY='kleenernetz_packet_highscore_v1';let high=Number(localStorage.getItem(KEY)||0);highEl.textContent=high;
-function rand(a,b){return Math.random()*(b-a)+a}
-function flash(t,x,y,bad){const e=document.createElement('div');e.className='flash';e.textContent=t;e.style.left=x+'px';e.style.top=y+'px';e.style.color=bad?'#fca5a5':'#bbf7d0';game.appendChild(e);setTimeout(()=>e.remove(),520)}
-function spawn(){
- if(!running)return;
- const r=game.getBoundingClientRect(),pad=40,bad=Math.random()<.18,x=rand(pad,r.width-pad),y=rand(pad,r.height-pad);
- const p=document.createElement('button');p.className='packet'+(bad?' bad':'');p.textContent=bad?'⚠':'⬢';p.style.left=x+'px';p.style.top=y+'px';
- let gone=false;const life=setTimeout(()=>{if(!gone){gone=true;p.remove()}},bad?1100:900);
- p.onpointerdown=e=>{e.preventDefault();if(!running||gone)return;gone=true;clearTimeout(life);score=bad?Math.max(0,score-2):score+1;scoreEl.textContent=score;flash(bad?'-2':'+1',x,y,bad);if(navigator.vibrate)navigator.vibrate(bad?60:20);p.classList.add('hit');setTimeout(()=>p.remove(),100)};
- game.appendChild(p);spawnTimer=setTimeout(spawn,rand(Math.max(260,650-score*10)*.75,Math.max(260,650-score*10)*1.25));
-}
-function clean(){game.querySelectorAll('.packet,.flash').forEach(e=>e.remove())}
-function end(){
- running=false;clearTimeout(spawnTimer);clearInterval(countdownTimer);clean();
- if(score>high){high=score;localStorage.setItem(KEY,high);highEl.textContent=high}
- overlay.innerHTML=`<div class="card"><h1>${score>=25?'Stark! 🔥':score>=15?'Sauber! 😎':'Nochmal? 😄'}</h1><p>Du hast <b style="color:white">${score} Punkte</b> geschafft.${score===high&&score>0?'<br>Neuer Highscore! 🏆':''}</p><button id="again">Nochmal spielen</button><div class="hint">Highscore bleibt auf diesem Gerät gespeichert.</div></div>`;
- overlay.style.display='grid';document.getElementById('again').onclick=start;
-}
-function start(){
- clean();score=0;timeLeft=30;running=true;scoreEl.textContent=0;timeEl.textContent=30;overlay.style.display='none';spawn();
- countdownTimer=setInterval(()=>{timeEl.textContent=--timeLeft;if(timeLeft<=0)end()},1000);
-}
-document.getElementById('start').onclick=start;
+(() => {
+  const COLS=10, ROWS=20, CELL=30;
+  const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+  const nextCanvas=document.getElementById('next'), nctx=nextCanvas.getContext('2d');
+  const scoreEl=document.getElementById('score'),levelEl=document.getElementById('level'),
+        linesEl=document.getElementById('lines'),highEl=document.getElementById('high');
+  const overlay=document.getElementById('overlay');
+  const KEY='kleener_blocks_high_v1';
+
+  const COLORS={
+    I:'#38bdf8',J:'#60a5fa',L:'#fb923c',O:'#facc15',
+    S:'#4ade80',T:'#c084fc',Z:'#f87171'
+  };
+  const SHAPES={
+    I:[[1,1,1,1]],
+    J:[[1,0,0],[1,1,1]],
+    L:[[0,0,1],[1,1,1]],
+    O:[[1,1],[1,1]],
+    S:[[0,1,1],[1,1,0]],
+    T:[[0,1,0],[1,1,1]],
+    Z:[[1,1,0],[0,1,1]]
+  };
+  const TYPES=Object.keys(SHAPES);
+
+  let board,player,nextPiece,score,lines,level,dropCounter,lastTime,running=false,paused=false,raf;
+  let high=Number(localStorage.getItem(KEY)||0); highEl.textContent=high;
+
+  function emptyBoard(){return Array.from({length:ROWS},()=>Array(COLS).fill(null))}
+  function randPiece(){
+    const type=TYPES[(Math.random()*TYPES.length)|0];
+    return {type,matrix:SHAPES[type].map(r=>r.slice()),x:0,y:0};
+  }
+  function spawn(){
+    player=nextPiece||randPiece();
+    nextPiece=randPiece();
+    player.x=((COLS-player.matrix[0].length)/2)|0;
+    player.y=-1;
+    drawNext();
+    if(collide(player)){gameOver()}
+  }
+  function collide(p){
+    for(let y=0;y<p.matrix.length;y++)for(let x=0;x<p.matrix[y].length;x++){
+      if(!p.matrix[y][x])continue;
+      const bx=p.x+x,by=p.y+y;
+      if(bx<0||bx>=COLS||by>=ROWS)return true;
+      if(by>=0&&board[by][bx])return true;
+    }
+    return false;
+  }
+  function merge(){
+    player.matrix.forEach((row,y)=>row.forEach((v,x)=>{
+      if(v && player.y+y>=0) board[player.y+y][player.x+x]=player.type;
+    }));
+  }
+  function sweep(){
+    let cleared=0;
+    outer:for(let y=ROWS-1;y>=0;y--){
+      for(let x=0;x<COLS;x++)if(!board[y][x])continue outer;
+      board.splice(y,1); board.unshift(Array(COLS).fill(null)); y++; cleared++;
+    }
+    if(cleared){
+      const table=[0,100,300,500,800];
+      score+=table[cleared]*level;
+      lines+=cleared;
+      level=1+Math.floor(lines/10);
+      updateStats();
+    }
+  }
+  function drop(){
+    if(!running||paused)return;
+    player.y++;
+    if(collide(player)){
+      player.y--; merge(); sweep(); spawn();
+    }
+    dropCounter=0;
+  }
+  function hardDrop(){
+    if(!running||paused)return;
+    let d=0;
+    while(!collide(player)){player.y++;d++}
+    player.y--; d--;
+    score+=Math.max(0,d)*2; updateStats();
+    merge(); sweep(); spawn(); dropCounter=0;
+  }
+  function move(dir){
+    if(!running||paused)return;
+    player.x+=dir;
+    if(collide(player))player.x-=dir;
+  }
+  function rotateMatrix(m){
+    return m[0].map((_,i)=>m.map(row=>row[i]).reverse());
+  }
+  function rotate(){
+    if(!running||paused)return;
+    const old=player.matrix,oldX=player.x;
+    player.matrix=rotateMatrix(player.matrix);
+    let offset=1;
+    while(collide(player)){
+      player.x+=offset;
+      offset=-(offset+(offset>0?1:-1));
+      if(Math.abs(offset)>player.matrix[0].length){
+        player.matrix=old;player.x=oldX;return;
+      }
+    }
+  }
+  function interval(){return Math.max(90,700-(level-1)*55)}
+  function updateStats(){
+    scoreEl.textContent=score; linesEl.textContent=lines; levelEl.textContent=level;
+    if(score>high){high=score;localStorage.setItem(KEY,String(high));highEl.textContent=high}
+  }
+
+  function roundedCell(c,x,y,color,alpha=1){
+    const px=x*CELL,py=y*CELL,r=5;
+    c.save();c.globalAlpha=alpha;c.fillStyle=color;
+    c.beginPath();c.roundRect(px+1.5,py+1.5,CELL-3,CELL-3,r);c.fill();
+    c.fillStyle='rgba(255,255,255,.18)';
+    c.fillRect(px+5,py+5,CELL-10,3);
+    c.restore();
+  }
+  function drawGrid(){
+    ctx.fillStyle='#070b15';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle='rgba(255,255,255,.035)';ctx.lineWidth=1;
+    for(let x=1;x<COLS;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,ROWS*CELL);ctx.stroke()}
+    for(let y=1;y<ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(COLS*CELL,y*CELL);ctx.stroke()}
+  }
+  function ghostY(){
+    const ghost={...player,y:player.y,matrix:player.matrix};
+    while(!collide(ghost))ghost.y++;
+    return ghost.y-1;
+  }
+  function draw(){
+    drawGrid();
+    board.forEach((row,y)=>row.forEach((t,x)=>{if(t)roundedCell(ctx,x,y,COLORS[t])}));
+    if(player&&running){
+      const gy=ghostY();
+      player.matrix.forEach((row,y)=>row.forEach((v,x)=>{
+        if(v && gy+y>=0)roundedCell(ctx,player.x+x,gy+y,COLORS[player.type],.18);
+      }));
+      player.matrix.forEach((row,y)=>row.forEach((v,x)=>{
+        if(v && player.y+y>=0)roundedCell(ctx,player.x+x,player.y+y,COLORS[player.type]);
+      }));
+    }
+  }
+  function drawNext(){
+    nctx.fillStyle='#070b15';nctx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
+    if(!nextPiece)return;
+    const m=nextPiece.matrix, size=24;
+    const ox=(nextCanvas.width-m[0].length*size)/2,oy=(nextCanvas.height-m.length*size)/2;
+    m.forEach((row,y)=>row.forEach((v,x)=>{
+      if(!v)return;
+      nctx.fillStyle=COLORS[nextPiece.type];
+      nctx.beginPath();nctx.roundRect(ox+x*size+1,oy+y*size+1,size-2,size-2,5);nctx.fill();
+      nctx.fillStyle='rgba(255,255,255,.18)';nctx.fillRect(ox+x*size+5,oy+y*size+5,size-10,3);
+    }));
+  }
+  function loop(time=0){
+    if(!running)return;
+    if(!paused){
+      const delta=time-lastTime;lastTime=time;dropCounter+=delta;
+      if(dropCounter>interval())drop();
+      draw();
+    }
+    raf=requestAnimationFrame(loop);
+  }
+  function newGame(){
+    cancelAnimationFrame(raf);
+    board=emptyBoard();score=0;lines=0;level=1;dropCounter=0;lastTime=0;paused=false;running=true;
+    nextPiece=randPiece();spawn();updateStats();overlay.classList.add('hidden');
+    document.getElementById('pause').textContent='Pause';
+    loop();
+  }
+  function gameOver(){
+    running=false;cancelAnimationFrame(raf);updateStats();draw();
+    overlay.innerHTML=`<div class="modal"><h1>Game Over 💀</h1><p>Du hast <b style="color:white">${score}</b> Punkte geschafft.${score===high&&score>0?'<br>Neuer Highscore! 🏆':''}</p><button class="btn primary" id="again">Nochmal spielen</button></div>`;
+    overlay.classList.remove('hidden');
+    document.getElementById('again').onclick=newGame;
+  }
+  function togglePause(){
+    if(!running)return;
+    paused=!paused;
+    document.getElementById('pause').textContent=paused?'Weiter':'Pause';
+    if(!paused){lastTime=performance.now()}
+  }
+
+  document.getElementById('start').onclick=newGame;
+  document.getElementById('restart').onclick=newGame;
+  document.getElementById('pause').onclick=togglePause;
+
+  document.addEventListener('keydown',e=>{
+    if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' '].includes(e.key))e.preventDefault();
+    if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')move(-1);
+    else if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')move(1);
+    else if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')drop();
+    else if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')rotate();
+    else if(e.key===' ')hardDrop();
+    else if(e.key.toLowerCase()==='p')togglePause();
+  },{passive:false});
+
+  document.querySelectorAll('.ctrl').forEach(b=>{
+    const act=b.dataset.act;
+    b.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      if(act==='left')move(-1);
+      if(act==='right')move(1);
+      if(act==='rotate')rotate();
+      if(act==='down')drop();
+      if(act==='drop')hardDrop();
+    },{passive:false});
+  });
+
+  let sx=0,sy=0;
+  canvas.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY},{passive:true});
+  canvas.addEventListener('touchend',e=>{
+    const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)<22&&Math.abs(dy)<22){rotate();return}
+    if(Math.abs(dx)>Math.abs(dy)){move(dx>0?1:-1)}
+    else if(dy>45){hardDrop()}
+  },{passive:true});
+
+  drawGrid();
+})();
 </script>
 </body>
 </html>
